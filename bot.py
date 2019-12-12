@@ -1,8 +1,13 @@
-import discord
+import discord, urllib.request, json, random
 from discord.ext import commands
 from discord.ext.commands import has_permissions, MissingPermissions
 
-import random
+userAuctionUrl = "https://api.hypixel.net/skyblock/auction?key=49e3e277-19e8-44e6-9d9d-0230ff58092e&profile=8be707e39cb146e69694638d4e3cd811"
+
+with urllib.request.urlopen(userAuctionUrl) as url:
+    data = json.loads(url.read().decode())
+
+print("success:", data["success"])
 
 client = commands.Bot(command_prefix = '!')
 
@@ -65,6 +70,14 @@ async def clear(ctx, *, amount=1):
 async def admin(ctx):
     await ctx.send('No shit')
 
+@client.command()
+@commands.has_permissions(administrator=True)
+async def get_last_auctions(ctx):
+    await ctx.send(f'success: {data["success"]}')
+    for auction in data["auctions"]:
+        if auction["claimed"] == False:
+            await ctx.send(f'Item: {auction["item_name"]}')
+
 @client.event
 async def on_member_join(member):
     print(f'{member} has joined a server')
@@ -75,4 +88,4 @@ async def on_member_remove(member):
 
 
 
-client.run('NjUyNTkwODc1MDMzMjA2Nzg1.XeuavQ.0eHnIuNT1BWLowOoXKZNbctlUvo')s
+client.run('NjUyNTkwODc1MDMzMjA2Nzg1.XeuavQ.0eHnIuNT1BWLowOoXKZNbctlUvo')
