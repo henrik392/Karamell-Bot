@@ -17,8 +17,28 @@ def TimestampTimeSince(timestamp):
     print(timestamp, currentTimestamp)
     timestampSec = timestamp / 1000
     print(round(currentTimestamp/1000 - timestamp))
-    dateTimeSince = "Ended: " + str(datetime.timedelta(seconds=round(currentTimestamp - timestampSec))) if round(currentTimestamp/1000 - timestampSec) > 0 else "Ends: " + str(datetime.timedelta(seconds=round(timestampSec - currentTimestamp)))
-    return dateTimeSince
+    if round(currentTimestamp/1000 - timestampSec):
+        timeSince = round(timestampSec - currentTimestamp)
+        dateTimeSinceString = "Ended: "
+    else:
+        timeSince = round(currentTimestamp - timestampSec)
+        dateTimeSinceString = "Ends: "
+
+    print(timeSince)
+
+    day = timeSince // (24 * 3600)
+    timeSince = timeSince % (24 * 3600)
+    hour = timeSince // 3600
+    timeSince %= 3600
+
+    minute = timeSince // 60
+    timeSince %= 60
+    seconds = timeSince
+
+    #dateTimeSinceString += f"{dateTimeSince.day} d : {dateTimeSince.hour} h : {dateTimeSince.minute} m : {dateTimeSince.second} s"
+    dateTimeSinceString += f"{day}d : {hour}h : {minute}m : {seconds}s"
+
+    return dateTimeSinceString
 
 
 def ParseJson(jsonUrl):
