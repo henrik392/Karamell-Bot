@@ -1,13 +1,25 @@
 import discord, urllib.request, json, random
 from discord.ext import commands
 from discord.ext.commands import has_permissions, MissingPermissions
+from datetime import datetime
 
-userAuctionUrl = "https://api.hypixel.net/skyblock/auction?key=49e3e277-19e8-44e6-9d9d-0230ff58092e&profile=8be707e39cb146e69694638d4e3cd811"
+key = "49e3e277-19e8-44e6-9d9d-0230ff58092e"
+profile = "8be707e39cb146e69694638d4e3cd811"
 
-with urllib.request.urlopen(userAuctionUrl) as url:
-    data = json.loads(url.read().decode())
+userAuctionUrl = f"https://api.hypixel.net/skyblock/auction?key={key}&profile={profile}"
+auctionsUrl = f"https://api.hypixel.net/skyblock/auctions?key={key}&page=0"
 
-print("success:", data["success"])
+def TimestampDate(timestamp):
+    return datetime.fromtimestamp(round(timestamp/1000))
+
+def ParseJson(jsonUrl):
+    with urllib.request.urlopen(jsonUrl) as url:
+        return json.loads(url.read().decode())
+
+def GetAuctionPage(auctionPage):
+    pageUrl = f"https://api.hypixel.net/skyblock/auctions?key={key}&page={auctionPage}"
+    return ParseJson(pageUrl)
+
 
 client = commands.Bot(command_prefix = '!')
 
@@ -73,10 +85,31 @@ async def admin(ctx):
 @client.command()
 @commands.has_permissions(administrator=True)
 async def get_last_auctions(ctx):
-    await ctx.send(f'success: {data["success"]}')
-    for auction in data["auctions"]:
+    userAuctionData = ParseJson(userAuctionUrl)
+    await ctx.send(f'success: {userAuctionData["success"]}')
+    for auction in userAuctionData["auctions"]:
         if auction["claimed"] == False:
             await ctx.send(f'Item: {auction["item_name"]}')
+
+@client.command()
+@commands.has_permissions(administrator=True)
+async def get_last_claimed_auctions(ctx):
+    userAuctionData = ParseJson(userAuctionUrl)
+    await ctx.send(f'success: {userAuctionData["success"]}')
+    for auction in userAuctionData["auctions"]:
+        if auction["claimed"]:
+            await ctx.send(f'Item: {auction["item_name"]} |-|BROFIT|-| Price: {auction["highest_bid_amount"]}')
+
+@client.command()
+@commands.has_permissions(administrator=True)
+async def get_random_auction(ctx):
+    auctionsData = ParseJson(auctionsUrl)
+    await ctx.send(f'Connected to api: {auctionsData["success"]}')
+    randomPage = random.randint(0, auctionsData["totalPages"]-1)
+    randomAuctionIndex = random.randint(0, len(auctionsData["auctions"])-1)
+    auction = GetAuctionPage(randomPage)["auctions"][randomAuctionIndex]
+    await ctx.send(f'Item: {auction["item_name"]} | Date: {TimestampDate(auction["end"])} | Price: {auction["highest_bid_amount"]}')
+
 
 @client.event
 async def on_member_join(member):
