@@ -9,6 +9,9 @@ profile = "8be707e39cb146e69694638d4e3cd811"
 userAuctionUrl = f"https://api.hypixel.net/skyblock/auction?key={key}&profile={profile}"
 auctionsUrl = f"https://api.hypixel.net/skyblock/auctions?key={key}&page=0"
 
+def TimestampDate(timestamp):
+    return datetime.fromtimestamp(round(timestamp/1000))
+
 def ParseJson(jsonUrl):
     with urllib.request.urlopen(jsonUrl) as url:
         return json.loads(url.read().decode())
@@ -101,11 +104,11 @@ async def get_last_claimed_auctions(ctx):
 @commands.has_permissions(administrator=True)
 async def get_random_auction(ctx):
     auctionsData = ParseJson(auctionsUrl)
-    await ctx.send(f'success: {auctionsData["success"]}')
+    await ctx.send(f'Connected to api: {auctionsData["success"]}')
     randomPage = random.randint(0, auctionsData["totalPages"]-1)
     randomAuctionIndex = random.randint(0, len(auctionsData["auctions"])-1)
     auction = GetAuctionPage(randomPage)["auctions"][randomAuctionIndex]
-    await ctx.send(f'Item: {auction["item_name"]} | Date: {datetime.fromtimestamp(auction["end"])} | Price: {auction["highest_bid_amount"]}')
+    await ctx.send(f'Item: {auction["item_name"]} | Date: {TimestampDate(auction["end"])} | Price: {auction["highest_bid_amount"]}')
 
 
 @client.event
