@@ -1,7 +1,7 @@
 import discord, urllib.request, json, random
 from discord.ext import commands
 from discord.ext.commands import has_permissions, MissingPermissions
-from datetime import datetime
+import datetime
 
 key = "49e3e277-19e8-44e6-9d9d-0230ff58092e"
 profile = "8be707e39cb146e69694638d4e3cd811"
@@ -10,7 +10,16 @@ userAuctionUrl = f"https://api.hypixel.net/skyblock/auction?key={key}&profile={p
 auctionsUrl = f"https://api.hypixel.net/skyblock/auctions?key={key}&page=0"
 
 def TimestampDate(timestamp):
-    return datetime.fromtimestamp(round(timestamp/1000))
+    return datetime.datetime.fromtimestamp(round(timestamp/1000))
+
+def TimestampTimeSince(timestamp):
+    currentTimestamp = datetime.datetime.now().timestamp()
+    print(timestamp, currentTimestamp)
+    timestampSec = timestamp / 1000
+    print(round(currentTimestamp/1000 - timestamp))
+    dateTimeSince = "Ended: " + str(datetime.timedelta(seconds=round(currentTimestamp - timestampSec))) if round(currentTimestamp/1000 - timestampSec) > 0 else "Ends: " + str(datetime.timedelta(seconds=round(timestampSec - currentTimestamp)))
+    return dateTimeSince
+
 
 def ParseJson(jsonUrl):
     with urllib.request.urlopen(jsonUrl) as url:
@@ -106,9 +115,11 @@ async def get_random_auction(ctx):
     auctionsData = ParseJson(auctionsUrl)
     await ctx.send(f'Connected to api: {auctionsData["success"]}')
     randomPage = random.randint(0, auctionsData["totalPages"]-1)
+    auctionsData = GetAuctionPage(randomPage)
     randomAuctionIndex = random.randint(0, len(auctionsData["auctions"])-1)
-    auction = GetAuctionPage(randomPage)["auctions"][randomAuctionIndex]
-    await ctx.send(f'Item: {auction["item_name"]} | Date: {TimestampDate(auction["end"])} | Price: {auction["highest_bid_amount"]}')
+    auction = auctionsData["auctions"][randomAuctionIndex]
+    priceString = "Price: " + str(auction["highest_bid_amount"]) if len(auction["bids"]) != 0 else "Starting Bid: " + str(auction["starting_bid"])
+    await ctx.send(f'Item: {auction["item_name"]} | Ends in: {TimestampTimeSince(auction["end"])} | ' + priceString)
 
 
 @client.event
