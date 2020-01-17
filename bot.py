@@ -27,22 +27,6 @@ client = commands.Bot(command_prefix = '!')
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
 
-# @client.event
-# async def on_message(message):
-#     if message.author == client.user:
-#         return
-
-#     if message.content.startswith(('hello').lower()):
-#         await message.channel.send('Hello!')
-    
-#     if message.content.startswith(('krle').lower()):
-#         #await message.channel.send('KRLE = Kjedelig')
-#         await message.channel.send('KRLE = Kristendom, religion, livssyn og etikk')
-    
-#     if message.content.startswith(('oof').lower()):
-#         await message.channel.send('...')
-
-
 @client.command()
 async def ping(ctx):
     await ctx.send(f'bruh {round(client.latency * 1000)}ms')
