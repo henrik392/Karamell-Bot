@@ -11,12 +11,25 @@ auctionsUrl = f"https://api.hypixel.net/skyblock/auctions?key={key}&page=0"
 
 def TimestampDate(timestamp):
     return datetime.datetime.fromtimestamp(round(timestamp/1000))
+    
+
+def SecondsToDateTime(sec):
+    time = [0, 0, 0, 0]
+    time[0] = sec // (24 * 3600)
+    sec = sec % (24 * 3600)
+    time[1] = sec // 3600
+    sec %= 3600
+
+    time[2] = sec // 60
+    sec %= 60
+    time[3] = sec
+    return time
 
 def TimestampTimeSince(timestamp):
     currentTimestamp = datetime.datetime.now().timestamp()
-    print(timestamp, currentTimestamp)
     timestampSec = timestamp / 1000
-    print(round(currentTimestamp/1000 - timestamp))
+
+    dateTimeSinceString = ""
     if round(currentTimestamp/1000 - timestampSec):
         timeSince = round(timestampSec - currentTimestamp)
         dateTimeSinceString = "Ended: "
@@ -24,19 +37,8 @@ def TimestampTimeSince(timestamp):
         timeSince = round(currentTimestamp - timestampSec)
         dateTimeSinceString = "Ends: "
 
-    print(timeSince)
-
-    day = timeSince // (24 * 3600)
-    timeSince = timeSince % (24 * 3600)
-    hour = timeSince // 3600
-    timeSince %= 3600
-
-    minute = timeSince // 60
-    timeSince %= 60
-    seconds = timeSince
-
-    #dateTimeSinceString += f"{dateTimeSince.day} d : {dateTimeSince.hour} h : {dateTimeSince.minute} m : {dateTimeSince.second} s"
-    dateTimeSinceString += f"{day}d : {hour}h : {minute}m : {seconds}s"
+    timeSinceDT = SecondsToDateTime(timeSince)
+    dateTimeSinceString += f"{timeSinceDT[0]}d : {timeSinceDT[1]}h : {timeSinceDT[2]}m : {timeSinceDT[3]}s"
 
     return dateTimeSinceString
 
@@ -123,7 +125,7 @@ async def get_random_auction(ctx):
     randomAuctionIndex = random.randint(0, len(auctionsData["auctions"])-1)
     auction = auctionsData["auctions"][randomAuctionIndex]
     priceString = "Price: " + str(auction["highest_bid_amount"]) if len(auction["bids"]) != 0 else "Starting Bid: " + str(auction["starting_bid"])
-    await ctx.send(f'Item: {auction["item_name"]} | Ends in: {TimestampTimeSince(auction["end"])} | ' + priceString)
+    await ctx.send(f'Item: {auction["item_name"]} | {TimestampTimeSince(auction["end"])} | ' + priceString + ' | User: ' + auction["uuid"])
 
 
 @client.event
