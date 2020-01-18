@@ -1,7 +1,6 @@
-import discord, urllib.request, json, random
+import discord, urllib.request, json, random, datetime
 from discord.ext import commands
 from discord.ext.commands import has_permissions, MissingPermissions
-import datetime
 
 key = "49e3e277-19e8-44e6-9d9d-0230ff58092e"
 profile = "8be707e39cb146e69694638d4e3cd811"
@@ -125,7 +124,12 @@ async def get_random_auction(ctx):
     randomAuctionIndex = random.randint(0, len(auctionsData["auctions"])-1)
     auction = auctionsData["auctions"][randomAuctionIndex]
     priceString = "Price: " + str(auction["highest_bid_amount"]) if len(auction["bids"]) != 0 else "Starting Bid: " + str(auction["starting_bid"])
-    await ctx.send(f'Item: {auction["item_name"]} | {TimestampTimeSince(auction["end"])} | ' + priceString + ' | User: ' + auction["uuid"])
+    playerDataUrl = "https://sessionserver.mojang.com/session/minecraft/profile/" + auction["uuid"]
+    print(playerDataUrl)
+    playerData = ParseJson(playerDataUrl)
+    name = playerData["name"]
+
+    await ctx.send(f'Item: {auction["item_name"]} | {TimestampTimeSince(auction["end"])} | ' + priceString + ' | User: ' + name)
 
 
 @client.event
