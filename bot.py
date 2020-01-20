@@ -8,6 +8,22 @@ profile = "8be707e39cb146e69694638d4e3cd811"
 userAuctionUrl = f"https://api.hypixel.net/skyblock/auction?key={key}&profile={profile}"
 auctionsUrl = f"https://api.hypixel.net/skyblock/auctions?key={key}&page=0"
 
+class UsernameChache:
+    name = ""
+    uuid = ""
+    timestamp = 0
+
+    def __init__(self, name, uuid, timestamp):
+        self.name = name
+        self.uuid = uuid
+        self.timestamp = timestamp
+
+
+usernameCache = []
+
+#if self.timestamp + 600 > datetime.datetime.now().timestamp():
+#    pass
+
 def TimestampDate(timestamp):
     return datetime.datetime.fromtimestamp(round(timestamp/1000))
     
@@ -29,11 +45,11 @@ def TimestampTimeSince(timestamp):
     timestampSec = timestamp / 1000
 
     dateTimeSinceString = ""
-    if round(currentTimestamp/1000 - timestampSec):
-        timeSince = round(timestampSec - currentTimestamp)
+    if round(currentTimestamp - timestampSec) > 0:
+        timeSince = round(currentTimestamp - timestampSec)
         dateTimeSinceString = "Ended: "
     else:
-        timeSince = round(currentTimestamp - timestampSec)
+        timeSince = round(timestampSec - currentTimestamp)
         dateTimeSinceString = "Ends: "
 
     timeSinceDT = SecondsToDateTime(timeSince)
@@ -124,10 +140,21 @@ async def get_random_auction(ctx):
     randomAuctionIndex = random.randint(0, len(auctionsData["auctions"])-1)
     auction = auctionsData["auctions"][randomAuctionIndex]
     priceString = "Price: " + str(auction["highest_bid_amount"]) if len(auction["bids"]) != 0 else "Starting Bid: " + str(auction["starting_bid"])
-    playerDataUrl = "https://sessionserver.mojang.com/session/minecraft/profile/" + auction["uuid"]
-    print(playerDataUrl)
-    playerData = ParseJson(playerDataUrl)
-    name = playerData["name"]
+    
+    inCache = False
+    if len(UsernameChache) != 0:
+        for player in usernameCache:
+            if player.uuid == auction["auctioneer"]:
+                inCache = True
+
+    if not inCache:
+        while usernameCache[0].timestamp + 600 > datetime.datetime.now().timestamp():
+            usernameCache.pop(0)
+        playerDataUrl = "https://sessionserver.mojang.com/session/minecraft/profile/" + auction["auctioneer"]
+        print(playerDataUrl)
+        playerData = ParseJson(playerDataUrl)
+        name = playerData["name"]
+        usernameCache.append(UsernameChache(name, playerData["uuid"], datetime.datetime.now().timestamp()))
 
     await ctx.send(f'Item: {auction["item_name"]} | {TimestampTimeSince(auction["end"])} | ' + priceString + ' | User: ' + name)
 
