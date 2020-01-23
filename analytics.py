@@ -13,7 +13,7 @@ rawBytes="H4sIAAAAAAAAABWNfwqCMBzF36aZG0FH6CxhPyEnZBf4xtYYTA2dUCfyHh4smn++x+d9ng
 
 def decode_inventory_data(raw):
    data = nbt.NBTFile(fileobj = io.BytesIO(base64.b64decode(raw)))
-   print(data.pretty_tree() #tags(0)) #["TAG_Compound"]["Count"].value)
+   print(data.pretty_tree()) #tags(0)) #["TAG_Compound"]["Count"].value)
 
 decode_inventory_data(rawBytes)
 
