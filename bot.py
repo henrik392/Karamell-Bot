@@ -8,7 +8,9 @@ profile = "8be707e39cb146e69694638d4e3cd811"
 userAuctionUrl = f"https://api.hypixel.net/skyblock/auction?key={key}&profile={profile}"
 auctionsUrl = f"https://api.hypixel.net/skyblock/auctions?key={key}&page=0"
 
-class UsernameChache:
+client = commands.Bot(command_prefix = '*')
+
+class UsernameCache:
     name = ""
     uuid = ""
     timestamp = 0
@@ -42,11 +44,11 @@ def SecondsToDateTime(sec):
 
 def TimestampTimeSince(timestamp):
     currentTimestamp = datetime.datetime.now().timestamp()
-    timestampSec = timestamp / 1000
+    timestampSec = timestamp / 1000 if timestamp > 9_999_999_999 else timestamp
 
     dateTimeSinceString = ""
-    if round(currentTimestamp - timestampSec) > 0:
-        timeSince = round(currentTimestamp - timestampSec)
+    if currentTimestamp > timestampSec:
+        timeSince = round(-timestampSec + currentTimestamp)
         dateTimeSinceString = "Ended: "
     else:
         timeSince = round(timestampSec - currentTimestamp)
@@ -66,8 +68,24 @@ def GetAuctionPage(auctionPage):
     pageUrl = f"https://api.hypixel.net/skyblock/auctions?key={key}&page={auctionPage}"
     return ParseJson(pageUrl)
 
+def NameFromUUID(uuid):
+    if len(usernameCache) != 0:
+        for player in usernameCache:
+            if player.uuid == uuid:
+                return player.name
 
-client = commands.Bot(command_prefix = '!')
+    # if len(usernameCache) > 0:
+    #     while usernameCache[0].timestamp + 600 > datetime.datetime.now().timestamp():
+    #         usernameCache.pop(0)
+
+    playerDataUrl = "https://sessionserver.mojang.com/session/minecraft/profile/" + uuid
+    print(playerDataUrl)
+    playerData = ParseJson(playerDataUrl)
+    username = playerData["name"]
+    usernameCache.append(UsernameCache(username, playerData["id"], datetime.datetime.now().timestamp()))
+    
+    return username
+
 
 @client.event
 async def on_ready():
@@ -140,23 +158,28 @@ async def get_random_auction(ctx):
     randomAuctionIndex = random.randint(0, len(auctionsData["auctions"])-1)
     auction = auctionsData["auctions"][randomAuctionIndex]
     priceString = "Price: " + str(auction["highest_bid_amount"]) if len(auction["bids"]) != 0 else "Starting Bid: " + str(auction["starting_bid"])
-    
-    inCache = False
-    if len(UsernameChache) != 0:
-        for player in usernameCache:
-            if player.uuid == auction["auctioneer"]:
-                inCache = True
 
-    if not inCache:
-        while usernameCache[0].timestamp + 600 > datetime.datetime.now().timestamp():
-            usernameCache.pop(0)
-        playerDataUrl = "https://sessionserver.mojang.com/session/minecraft/profile/" + auction["auctioneer"]
-        print(playerDataUrl)
-        playerData = ParseJson(playerDataUrl)
-        name = playerData["name"]
-        usernameCache.append(UsernameChache(name, playerData["uuid"], datetime.datetime.now().timestamp()))
+    name = NameFromUUID(auction["auctioneer"])
 
     await ctx.send(f'Item: {auction["item_name"]} | {TimestampTimeSince(auction["end"])} | ' + priceString + ' | User: ' + name)
+
+@client.command()
+@commands.has_permissions(administrator=True)
+async def stonks(ctx, *, item_name, price=100):
+    with open('auctions.json') as infile:
+        auctionResults = json.load(infile)
+
+    for auction in auctionResults["sorted_auctions"]:
+        if auction["end"] - 300 > round(datetime.datetime.now().timestamp()):
+            await ctx.send("Didn't find sheit")
+            print(auction)
+            break
+        
+        if auction["end"] - 60 > round(datetime.datetime.now().timestamp()):# and auction["item_name"]=="Enchanted Rotten Flesh": # auction["item_name"] == item_name:
+            name = NameFromUUID(ParseJson(f'https://api.hypixel.net/skyblock/auction?key={key}&uuid=' + auction["uuid"])["auctions"][0]["auctioneer"])
+            await ctx.send(f'{auction["count"]}x {auction["item_name"]} | Minimun price: {auction["cost"]:,} | {TimestampTimeSince(auction["end"])} | username: {name}')
+
+    # auction = ParseJson(f"https://api.hypixel.net/skyblock/auction?key={key}&uuid={uuid}")["auctions"]
 
 
 @client.event
@@ -169,4 +192,4 @@ async def on_member_remove(member):
 
 
 
-client.run('NjUyNTkwODc1MDMzMjA2Nzg1.XeuavQ.0eHnIuNT1BWLowOoXKZNbctlUvo')
+client.run('NjUyNTkwODc1MDMzMjA2Nzg1.Xisktg.Ha8mh1Pq6CsmiIGg-IXh7QA5SKQ')
