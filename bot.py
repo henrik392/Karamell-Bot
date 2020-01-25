@@ -73,7 +73,7 @@ def NameFromUUID(uuid):
         for player in usernameCache:
             if player.uuid == uuid:
                 return player.name
-
+                
     # if len(usernameCache) > 0:
     #     while usernameCache[0].timestamp + 600 > datetime.datetime.now().timestamp():
     #         usernameCache.pop(0)
@@ -86,10 +86,136 @@ def NameFromUUID(uuid):
     
     return username
 
+def UUIDFromName(name):
+    if len(usernameCache) != 0:
+        for player in usernameCache:
+            if player.name == name:
+                return player.uuid
+                
+    # if len(usernameCache) > 0:
+    #     while usernameCache[0].timestamp + 600 > datetime.datetime.now().timestamp():
+    #         usernameCache.pop(0)
+    
+    playerDataUrl = "https://sessionserver.mojang.com/users/profiles/minecraft/" + name
+    print(playerDataUrl)
+    playerData = ParseJson(playerDataUrl)
+    uuid = playerData["id"]
+    usernameCache.append(UsernameCache(playerData["name"], uuid, datetime.datetime.now().timestamp()))
+
+    return uuid
+
 
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
+    await client.change_presence(status=discord.Status.idle, activity=discord.Game('Spiser karemeller'))
+
+
+@client.command()
+@commands.has_permissions(administrator=True)
+async def get_random_auction(ctx):
+    auctionsData = ParseJson(auctionsUrl)
+    await ctx.send(f'Connected to api: {auctionsData["success"]}')
+    randomPage = random.randint(0, auctionsData["totalPages"]-1)
+    auctionsData = GetAuctionPage(randomPage)
+    randomAuctionIndex = random.randint(0, len(auctionsData["auctions"])-1)
+    auction = auctionsData["auctions"][randomAuctionIndex]
+    priceString = "Price: " + str(auction["highest_bid_amount"]) if len(auction["bids"]) != 0 else "Starting Bid: " + str(auction["starting_bid"])
+
+    name = NameFromUUID(auction["auctioneer"])
+
+    await ctx.send(f'Item: {auction["item_name"]} | {TimestampTimeSince(auction["end"])} | ' + priceString + ' | User: ' + name)
+
+@client.command()
+@commands.has_permissions(administrator=True)
+async def stonks(ctx, item_name, price_max, username):
+    with open('auctions.json') as infile:
+        auctionResults = json.load(infile)
+
+    try:
+        usernameUUID = UUIDFromName(username)
+    except:
+        await ctx.send('Mojang uuid to name api request failed.')
+        usernameUUID = '30f31719332745ed9a1cd8894c51ccd0'
+
+    test = False
+    price_max = float(price_max)
+
+    auctionEmbed = discord.Embed(
+        title = f'Auctions for {item_name}',
+        description = f'{item_name} below {price_max} ending in 1 - 5 min',
+        colour = discord.Color.gold()
+    )
+    auctionEmbed.set_footer(text='That\'s it')
+    auctionEmbed.set_author(name='The one and only MR. Sheep')
+
+    field = 0
+    for auction in auctionResults["sorted_auctions"]:
+        if auction["end"] - 300 > round(datetime.datetime.now().timestamp()):
+            if field == 0:
+                auctionEmbed.add_field(name='Sorry.', value='No auctions', inline=False)
+            
+            await ctx.send(embed=auctionEmbed)
+            print(auction)
+            break
+        
+        if not test:
+            print(auction["end"], datetime.datetime.now().timestamp())
+            test = True
+
+        
+        cost = auction["highest_bid"] * 1.15 if auction["highest_bid"] != 0 else auction["starting_bid"]
+        if auction["end"] - 60 > datetime.datetime.now().timestamp() and auction["item_name"].lower() == item_name.lower() and cost <= price_max * auction["count"]:
+            try:
+                auctionJSON = ParseJson(f'https://api.hypixel.net/skyblock/auction?key={key}&uuid=' + auction["uuid"])["auctions"][0]
+            except:
+                await ctx.send('Hypixel api request failed.')
+
+            isStartingBidString = ""
+            isStartingBid = auctionJSON["highest_bid_amount"] != 0
+            if isStartingBid:
+                price = auctionJSON["highest_bid_amount"]
+                cost = price * 1.15
+            else:
+                price = auctionJSON["starting_bid"]
+                cost = price
+                isStartingBidString = ", starting bid"
+
+            highestBidderUUID = auctionJSON["bids"][len(auctionJSON["bids"])-1]
+            if cost <= price_max * auction["count"] and highestBidderUUID != usernameUUID:
+                try:
+                    name = NameFromUUID(auctionJSON["auctioneer"])
+                except:
+                    await ctx.send('Mojang uuid to name api request failed.')
+                cost = round(cost)
+
+                field += 1
+                auctionEmbed.add_field(name=f'{auction["count"]}x {auction["item_name"]}', value=f'{TimestampTimeSince(auction["end"])}  |  username: {name}', inline=True)
+                auctionEmbed.add_field(name='prices', value=f'Price: {price:,}{isStartingBidString}  |  Min cost: {cost:,}  |  Min cost per: {round(cost/auction["count"]):,}', inline=True)
+                auctionEmbed.add_field(name='\u200b', value='\u200b', inline=False)
+
+
+    # auction = ParseJson(f"https://api.hypixel.net/skyblock/auction?key={key}&uuid={uuid}")["auctions"]
+
+@client.command()
+@commands.has_permissions(administrator=True)
+async def get_last_auctions(ctx):
+    userAuctionData = ParseJson(userAuctionUrl)
+    await ctx.send(f'success: {userAuctionData["success"]}')
+    for auction in userAuctionData["auctions"]:
+        if auction["claimed"] == False:
+            await ctx.send(f'Item: {auction["item_name"]}')
+
+@client.command()
+@commands.has_permissions(administrator=True)
+async def get_last_claimed_auctions(ctx):
+    userAuctionData = ParseJson(userAuctionUrl)
+    await ctx.send(f'success: {userAuctionData["success"]}')
+    for auction in userAuctionData["auctions"]:
+        if auction["claimed"]:
+            await ctx.send(f'Item: {auction["item_name"]} |-|BROFIT|-| Price: {auction["highest_bid_amount"]}')
+
+# Non auction:
 
 @client.command()
 async def ping(ctx):
@@ -130,57 +256,7 @@ async def clear(ctx, *, amount=1):
 async def admin(ctx):
     await ctx.send('No shit')
 
-@client.command()
-@commands.has_permissions(administrator=True)
-async def get_last_auctions(ctx):
-    userAuctionData = ParseJson(userAuctionUrl)
-    await ctx.send(f'success: {userAuctionData["success"]}')
-    for auction in userAuctionData["auctions"]:
-        if auction["claimed"] == False:
-            await ctx.send(f'Item: {auction["item_name"]}')
-
-@client.command()
-@commands.has_permissions(administrator=True)
-async def get_last_claimed_auctions(ctx):
-    userAuctionData = ParseJson(userAuctionUrl)
-    await ctx.send(f'success: {userAuctionData["success"]}')
-    for auction in userAuctionData["auctions"]:
-        if auction["claimed"]:
-            await ctx.send(f'Item: {auction["item_name"]} |-|BROFIT|-| Price: {auction["highest_bid_amount"]}')
-
-@client.command()
-@commands.has_permissions(administrator=True)
-async def get_random_auction(ctx):
-    auctionsData = ParseJson(auctionsUrl)
-    await ctx.send(f'Connected to api: {auctionsData["success"]}')
-    randomPage = random.randint(0, auctionsData["totalPages"]-1)
-    auctionsData = GetAuctionPage(randomPage)
-    randomAuctionIndex = random.randint(0, len(auctionsData["auctions"])-1)
-    auction = auctionsData["auctions"][randomAuctionIndex]
-    priceString = "Price: " + str(auction["highest_bid_amount"]) if len(auction["bids"]) != 0 else "Starting Bid: " + str(auction["starting_bid"])
-
-    name = NameFromUUID(auction["auctioneer"])
-
-    await ctx.send(f'Item: {auction["item_name"]} | {TimestampTimeSince(auction["end"])} | ' + priceString + ' | User: ' + name)
-
-@client.command()
-@commands.has_permissions(administrator=True)
-async def stonks(ctx, *, item_name, price=100):
-    with open('auctions.json') as infile:
-        auctionResults = json.load(infile)
-
-    for auction in auctionResults["sorted_auctions"]:
-        if auction["end"] - 300 > round(datetime.datetime.now().timestamp()):
-            await ctx.send("Didn't find sheit")
-            print(auction)
-            break
-        
-        if auction["end"] - 60 > round(datetime.datetime.now().timestamp()):# and auction["item_name"]=="Enchanted Rotten Flesh": # auction["item_name"] == item_name:
-            name = NameFromUUID(ParseJson(f'https://api.hypixel.net/skyblock/auction?key={key}&uuid=' + auction["uuid"])["auctions"][0]["auctioneer"])
-            await ctx.send(f'{auction["count"]}x {auction["item_name"]} | Minimun price: {auction["cost"]:,} | {TimestampTimeSince(auction["end"])} | username: {name}')
-
-    # auction = ParseJson(f"https://api.hypixel.net/skyblock/auction?key={key}&uuid={uuid}")["auctions"]
-
+# Client events
 
 @client.event
 async def on_member_join(member):
@@ -191,5 +267,4 @@ async def on_member_remove(member):
     print(f'{member} has left a server')
 
 
-
-client.run('NjUyNTkwODc1MDMzMjA2Nzg1.Xisktg.Ha8mh1Pq6CsmiIGg-IXh7QA5SKQ')
+client.run('NjUyNTkwODc1MDMzMjA2Nzg1.XiwkjQ.Gw2Rb0F6Wgp6QOwRGC_an3qTpzA')

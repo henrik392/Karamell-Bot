@@ -23,14 +23,13 @@ def AnalyzeAuctions():
             auctions = r.json()
 
         for auction in auctions["auctions"]:
-            cost = auction["highest_bid_amount"] * 1.15 if auction["highest_bid_amount"] != 0 else auction["starting_bid"]
             data = {
                 "item_name": auction["item_name"],
                 "uuid": auction["uuid"],
                 "count": ItemDataCount(auction["item_bytes"]),
                 "end": round(auction["end"]/1000),
                 "starting_bid": auction["starting_bid"],
-                "cost": round(cost)
+                "highest_bid": auction["highest_bid_amount"]
             }
             results.append(data)
 
@@ -52,4 +51,17 @@ def UpdateAuctionsJson():
     
     print("-SUCCESS-")
 
-UpdateAuctionsJson()
+
+def AnalyzeTimes(times):
+    for i in range(0, times):
+        UpdateAuctionsJson()
+        sleep(100)
+
+while True:
+    loop = input("How many time do you want to loop? ")
+    try:
+        AnalyzeTimes(int(loop))
+    except:
+        exit()
+        
+    
