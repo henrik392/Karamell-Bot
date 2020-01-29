@@ -5,7 +5,7 @@ from discord.ext.commands import has_permissions, MissingPermissions
 with open('APIkey.txt') as infile: # Reads APIkey.txt
     keys = infile.readlines()
 
-key = keys[0]
+key = keys[0].rstrip()
 profile = "8be707e39cb146e69694638d4e3cd811"
 
 userAuctionUrl = f"https://api.hypixel.net/skyblock/auction?key={key}&profile={profile}"
@@ -350,4 +350,4 @@ async def on_member_remove(member):
     print(f'{member} has left a server')
 #endregion
 
-client.run(keys[1])
+client.run(keys[1].rstrip())

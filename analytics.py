@@ -9,7 +9,9 @@ from datetime import datetime
 with open('APIkey.txt') as infile: # Reads APIkey.txt
     keys = infile.readlines()
 
-key = keys[0]
+key = keys[0].rstrip()
+print(key)
+print(f'https://api.hypixel.net/skyblock/auctions?key={key}&page=0')
 
 def ItemDataCount(raw):
    data = nbt.NBTFile(fileobj = io.BytesIO(base64.b64decode(raw)))
@@ -63,10 +65,11 @@ def AnalyzeTimes(times):
         sleep(100)
 
 while True:
-    loop = 10000 #input("How many time do you want to loop? ")
-    try:
-        UpdateAuctionsJson() # AnalyzeTimes(int(loop))
-    except:
-        exit()
+    UpdateAuctionsJson()
+    # loop = 10000 #input("How many time do you want to loop? ")
+    # try:
+    #     UpdateAuctionsJson() # AnalyzeTimes(int(loop))
+    # except:
+    #     exit()
         
     
