@@ -2,7 +2,10 @@ import discord, urllib.request, json, random, datetime
 from discord.ext import commands
 from discord.ext.commands import has_permissions, MissingPermissions
 
-key = "49e3e277-19e8-44e6-9d9d-0230ff58092e"
+with open('APIkey.txt') as infile: # Reads APIkey.txt
+    keys = infile.readlines()
+
+key = keys[0]
 profile = "8be707e39cb146e69694638d4e3cd811"
 
 userAuctionUrl = f"https://api.hypixel.net/skyblock/auction?key={key}&profile={profile}"
@@ -10,16 +13,10 @@ auctionsUrl = f"https://api.hypixel.net/skyblock/auctions?key={key}&page=0"
 
 client = commands.Bot(command_prefix = '*')
 
-@client.event
-async def on_ready():
-    print('We have logged in as {0.user}'.format(client))
-    await client.change_presence(status=discord.Status.idle, activity=discord.Game('Spiser karemeller'))
-
 #region Other functions
 def TimestampDate(timestamp):
     return datetime.datetime.fromtimestamp(round(timestamp/1000))
     
-
 def SecondsToDateTime(sec):
     time = [0, 0, 0, 0]
     time[0] = sec // (24 * 3600)
@@ -48,7 +45,6 @@ def TimestampTimeSince(timestamp):
     dateTimeSinceString += f"{timeSinceDT[0]}d : {timeSinceDT[1]}h : {timeSinceDT[2]}m : {timeSinceDT[3]}s"
 
     return dateTimeSinceString
-
 
 def ParseJson(jsonUrl):
     with urllib.request.urlopen(jsonUrl) as url:
@@ -117,6 +113,10 @@ def UUIDFromName(name):
     return uuid
 #endregion
 
+@client.event
+async def on_ready():
+    print('We have logged in as {0.user}'.format(client))
+    await client.change_presence(status=discord.Status.idle, activity=discord.Game('Spiser karemeller'))
 
 @client.command()
 @commands.has_permissions(administrator=True)
@@ -350,4 +350,4 @@ async def on_member_remove(member):
     print(f'{member} has left a server')
 #endregion
 
-client.run('NjUyNTkwODc1MDMzMjA2Nzg1.Xi1kxw.AntwsYYpmeG1AMFDwksmV0BKXkk')
+client.run(keys[1])
