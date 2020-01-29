@@ -63,9 +63,9 @@ def AnalyzeTimes(times):
         sleep(100)
 
 while True:
-    loop = input("How many time do you want to loop? ")
+    loop = 10000 #input("How many time do you want to loop? ")
     try:
-        AnalyzeTimes(int(loop))
+        UpdateAuctionsJson() # AnalyzeTimes(int(loop))
     except:
         exit()
         
