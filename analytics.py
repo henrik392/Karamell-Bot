@@ -6,20 +6,25 @@ from time import sleep
 from nbt import nbt # !! sudo pip install nbt !!
 from datetime import datetime
 
+with open('APIkey.txt') as infile: # Reads APIkey.txt
+    keys = infile.readlines()
+
+key = keys[0]
+
 def ItemDataCount(raw):
    data = nbt.NBTFile(fileobj = io.BytesIO(base64.b64decode(raw)))
    
    return int(data["i"][0]["Count"].valuestr())
 
 def AnalyzeAuctions():
-    r = requests.get("https://api.hypixel.net/skyblock/auctions?key=49e3e277-19e8-44e6-9d9d-0230ff58092e&page=0")
+    r = requests.get(f'https://api.hypixel.net/skyblock/auctions?key={key}&page=0')
     auctions = r.json()
     results = []
 
     i = 0
     while i < auctions["totalPages"]:
         if i != 0:
-            r = requests.get(f"https://api.hypixel.net/skyblock/auctions?key=49e3e277-19e8-44e6-9d9d-0230ff58092e&page={i}")
+            r = requests.get(f"https://api.hypixel.net/skyblock/auctions?key={key}&page={i}")
             auctions = r.json()
 
         for auction in auctions["auctions"]:
