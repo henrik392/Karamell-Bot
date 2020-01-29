@@ -1,2 +1,2 @@
-worker: python bot.py
-worker: python analytics.py
+bot: python bot.py
+analyze: python analytics.py
