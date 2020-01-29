@@ -41,7 +41,7 @@ def AnalyzeAuctions():
             results.append(data)
 
 
-        print(round((i + 1) * 100 / auctions["totalPages"]), "%")
+        # print(round((i + 1) * 100 / auctions["totalPages"]), "%")
         sleep(0.5)
         i += 1
 
@@ -56,7 +56,7 @@ def UpdateAuctionsJson():
     with open('auctions.json', 'w') as outfile:
         json.dump(jsonData, outfile)
     
-    print("-SUCCESS-")
+    print("-SUCCESS-", datetime.now())
 
 
 def AnalyzeTimes(times):
