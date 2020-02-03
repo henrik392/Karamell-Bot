@@ -1,3 +1,5 @@
+"""Bot til KaramellServer"""
+
 import datetime
 import json
 import random
