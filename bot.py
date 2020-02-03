@@ -2,15 +2,13 @@ import datetime
 import json
 import random
 import urllib.request
+import os
 
 import discord
 from discord.ext import commands
 from discord.ext.commands import MissingPermissions, has_permissions
 
-with open('APIkey.txt') as infile:  # Reads APIkey.txt
-    keys = infile.readlines()
-
-key = keys[0].rstrip()
+key = os.environ.get("hypixel")
 profile = "8be707e39cb146e69694638d4e3cd811"
 
 userAuctionUrl = f"https://api.hypixel.net/skyblock/auction?key={key}&profile={profile}"
@@ -400,4 +398,4 @@ async def on_member_remove(member):
     print(f'{member} has left the server')
 # endregion
 
-client.run(keys[1].rstrip())
+client.run(os.environ.get("disc"))
