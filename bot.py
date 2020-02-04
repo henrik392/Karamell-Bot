@@ -231,6 +231,10 @@ async def stonks(ctx, item_name, price_max, username):
                     name='\u200b', value='\u200b', inline=False)
                 # Add to field index
                 field += 1
+                if field > 7:
+                    auctionEmbed.set_footer(text='Can\'t display more auctions.')
+                    await ctx.send(embed=auctionEmbed)
+                    break
 
 
 @client.command()
@@ -313,7 +317,6 @@ async def watchlist(ctx, item_name, price_max, username):
                 auctionEmbed.add_field(
                     name='\u200b', value='\u200b', inline=False)
                 # Add to field index
-                field += 1
 
 
 @client.command()
@@ -398,4 +401,4 @@ async def on_member_remove(member):
     print(f'{member} has left the server')
 # endregion
 
-client.run(os.environ.get("disc"))
+client.run(str(os.environ.get("disc")))

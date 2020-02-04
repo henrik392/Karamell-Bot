@@ -1,22 +1,19 @@
 import json
 import requests
 import io
+import os
 import base64
 from time import sleep
 from nbt import nbt  # !! sudo pip install nbt !!
 from datetime import datetime
 
-with open('APIkey.txt') as infile:  # Reads APIkey.txt
-    keys = infile.readlines()
-
-key = keys[0].rstrip()
+key = os.environ.get("hypixel")
 print(key)
 print(f'https://api.hypixel.net/skyblock/auctions?key={key}&page=0')
 
 
 def ItemDataCount(raw):
     data = nbt.NBTFile(fileobj=io.BytesIO(base64.b64decode(raw)))
-
     return int(data["i"][0]["Count"].valuestr())
 
 
