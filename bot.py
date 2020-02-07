@@ -18,7 +18,6 @@ client = commands.Bot(command_prefix='*')
 
 # region Other functions
 
-
 def TimestampDate(timestamp):
     return datetime.datetime.fromtimestamp(round(timestamp/1000))
 
@@ -152,7 +151,7 @@ async def get_random_auction(ctx):
 @client.command()
 @commands.has_permissions(administrator=True)
 # returns items with matching ane and pircerange where your are not the highest bidder
-async def stonks(ctx, item_name, price_max, username):
+async def stonks(ctx, item_name="eye", price_max=99999999, username="RqxOG", time_min = 10, time_max = 300):
     with open('auctions.json') as infile:  # Reads auction.json
         auctionResults = json.load(infile)
 
@@ -165,12 +164,12 @@ async def stonks(ctx, item_name, price_max, username):
 
     # Embedded message
     auctionEmbed = discord.Embed(
-        title=f'Auctions for {item_name}',
+        title=f'Auctions containing {item_name}',
         description=f'{item_name} below {price_max} ending in 1 - 5 min',
         colour=discord.Color.gold()
     )
     auctionEmbed.set_footer(text='That\'s it')
-    auctionEmbed.set_author(name='The one and only MR. Sheep')
+    auctionEmbed.set_author(name='Sheep')
 
     # vars
     price_max = float(price_max)
