@@ -3,7 +3,6 @@ import json
 import random
 import urllib.request
 import os
-import sys
 
 import discord
 from discord.ext import commands
