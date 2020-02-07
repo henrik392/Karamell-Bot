@@ -1,14 +1,14 @@
 import datetime
 import json
+import os
 import random
 import urllib.request
-import os
 
 import discord
 from discord.ext import commands
 from discord.ext.commands import MissingPermissions, has_permissions
 
-key = os.environ.get("hypixel")
+key = os.environ.get("HYPIXEL")
 profile = "8be707e39cb146e69694638d4e3cd811"
 
 userAuctionUrl = f"https://api.hypixel.net/skyblock/auction?key={key}&profile={profile}"
@@ -17,6 +17,7 @@ auctionsUrl = f"https://api.hypixel.net/skyblock/auctions?key={key}&page=0"
 client = commands.Bot(command_prefix='*')
 
 # region Other functions
+
 
 def TimestampDate(timestamp):
     return datetime.datetime.fromtimestamp(round(timestamp/1000))
@@ -151,7 +152,7 @@ async def get_random_auction(ctx):
 @client.command()
 @commands.has_permissions(administrator=True)
 # returns items with matching ane and pircerange where your are not the highest bidder
-async def stonks(ctx, item_name="eye", price_max=99999999, username="RqxOG", time_min = 10, time_max = 300):
+async def stonks(ctx, item_name="eye", price_max=99999999, username="RqxOG", time_min=10, time_max=300):
     with open('auctions.json') as infile:  # Reads auction.json
         auctionResults = json.load(infile)
 
@@ -178,7 +179,7 @@ async def stonks(ctx, item_name="eye", price_max=99999999, username="RqxOG", tim
     # Cycles through each auction
     for auction in auctionResults["sorted_auctions"]:
         # until x amount of seconds passed
-        if auction["end"] - 300 > round(datetime.datetime.now().timestamp()):
+        if auction["end"] - time_max > round(datetime.datetime.now().timestamp()):
             if field == 0:  # If no matched auctions found
                 auctionEmbed.add_field(
                     name='Sorry.', value='No auctions', inline=False)
@@ -190,7 +191,7 @@ async def stonks(ctx, item_name="eye", price_max=99999999, username="RqxOG", tim
         # gets the acctual cost of current price, (might be outdated)
         cost = auction["highest_bid"] * \
             1.15 if auction["highest_bid"] != 0 else auction["starting_bid"]
-        if auction["end"] - 60 > datetime.datetime.now().timestamp() and auction["item_name"].lower() == item_name.lower() and cost <= price_max * auction["count"]:
+        if auction["end"] - time_min > datetime.datetime.now().timestamp() and auction["item_name"].lower() == item_name.lower() and cost <= price_max * auction["count"]:
             # Gets auction to update old information from auctions.json
             try:
                 auctionJSON = ParseJson(
@@ -231,7 +232,8 @@ async def stonks(ctx, item_name="eye", price_max=99999999, username="RqxOG", tim
                 # Add to field index
                 field += 1
                 if field > 7:
-                    auctionEmbed.set_footer(text='Can\'t display more auctions.')
+                    auctionEmbed.set_footer(
+                        text='Can\'t display more auctions.')
                     await ctx.send(embed=auctionEmbed)
                     break
 
@@ -251,12 +253,12 @@ async def watchlist(ctx, item_name, price_max, username):
 
     # Embedded message
     auctionEmbed = discord.Embed(
-        title=f'Auctions for {item_name}',
+        title=f'Auctions containing {item_name}',
         description=f'{item_name} below {price_max} ending in 1 - 5 min',
         colour=discord.Color.gold()
     )
     auctionEmbed.set_footer(text='That\'s it')
-    auctionEmbed.set_author(name='The one and only MR. Sheep')
+    auctionEmbed.set_author(name='Sheep')
 
     # vars
     price_max = float(price_max)
@@ -265,7 +267,7 @@ async def watchlist(ctx, item_name, price_max, username):
     # Cycles through each auction
     for auction in auctionResults["sorted_auctions"]:
         # until x amount of seconds passed
-        if auction["end"] - 300 > round(datetime.datetime.now().timestamp()):
+        if auction["end"] - time_max > round(datetime.datetime.now().timestamp()):
             if field == 0:  # If no matched auctions found
                 auctionEmbed.add_field(
                     name='Sorry.', value='No auctions', inline=False)
@@ -277,7 +279,7 @@ async def watchlist(ctx, item_name, price_max, username):
         # gets the acctual cost of current price, (might be outdated)
         cost = auction["highest_bid"] * \
             1.15 if auction["highest_bid"] != 0 else auction["starting_bid"]
-        if auction["end"] - 60 > datetime.datetime.now().timestamp() and auction["item_name"].lower() == item_name.lower() and cost <= price_max * auction["count"]:
+        if auction["end"] - time_min > datetime.datetime.now().timestamp() and auction["item_name"].lower() == item_name.lower() and cost <= price_max * auction["count"]:
             # Gets auction to update old information from auctions.json
             try:
                 auctionJSON = ParseJson(
@@ -316,6 +318,12 @@ async def watchlist(ctx, item_name, price_max, username):
                 auctionEmbed.add_field(
                     name='\u200b', value='\u200b', inline=False)
                 # Add to field index
+                field += 1
+                if field > 7:
+                    auctionEmbed.set_footer(
+                        text='Can\'t display more auctions.')
+                    await ctx.send(embed=auctionEmbed)
+                    break
 
 
 @client.command()
@@ -400,4 +408,4 @@ async def on_member_remove(member):
     print(f'{member} has left the server')
 # endregion
 
-client.run(str(os.environ.get("disc")))
+client.run(str(os.environ.get("DISC")))
